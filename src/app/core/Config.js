@@ -1,8 +1,8 @@
-import {fromJS} from "immutable";
-import {MeshBasicMaterial, Vector4, BoxGeometry, Mesh, WebGLRenderer, Scene, PerspectiveCamera, PointLight} from "three";
+import {fromJS} from 'immutable'
+import {WebGLRenderer, Scene, PerspectiveCamera} from 'three'
 
 // THREE
-const scene = new Scene();
+const scene = new Scene()
 const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
 const renderer = new WebGLRenderer({antialias: true})
 const composer = undefined
