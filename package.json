@@ -1,0 +1,27 @@
+{
+  "name": "parcel-rxjs-threejs-pack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docker": "docker-compose up",
+    "start": "./node_modules/.bin/parcel ./src/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "brunch": "^2.10.12",
+    "immutable": "^3.8.2",
+    "rxjs": "^5.5.6",
+    "three": "^0.89.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^7.2.5",
+    "babel-preset-env": "^1.6.1",
+    "node-sass": "^4.7.2",
+    "parcel-bundler": "^1.4.1",
+    "postcss-modules": "^1.1.0",
+    "posthtml-img-autosize": "^0.1.1"
+  }
+}
