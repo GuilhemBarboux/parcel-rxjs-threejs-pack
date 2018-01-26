@@ -5,6 +5,10 @@ export default class App extends Core {
   constructor () {
     super()
 
+    if (module.hot) {
+      module.hot.dispose(() => this.hmr())
+    }
+
     const scene = Config.get('scene')
     const camera = Config.get('camera')
     const frontLight = new PointLight(0xFFFFFF, 1)
@@ -31,9 +35,9 @@ export default class App extends Core {
     )
 
     // Update
-    Loop.subscribe(state => {
+    this.unsuscribers.push(Loop.subscribe(state => {
       mesh.rotation.x -= 0.02
       mesh.rotation.y += 0.02
-    })
+    }))
   }
 }

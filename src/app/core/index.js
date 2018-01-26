@@ -4,11 +4,26 @@ import Resize from './Resize'
 
 class Core {
   constructor () {
-    // Subscribe resize with debounce
-    Resize.debounceTime(350).subscribe(this.resize)
+    // Observable
+    this.unsuscribers = [
+      Loop.takeWhile(() => this.rendering).subscribe(this.render),
+      Resize.takeWhile(() => this.resizing).debounceTime(350).subscribe(this.resize)
+    ]
 
     // Start render
-    this.start()
+    this.rendering = true
+    this.resizing = true
+  }
+  hmr () {
+    this.clear()
+    this.unsuscribers.forEach(unsuscriber => unsuscriber.unsubscribe())
+  }
+  clear () {
+    const scene = Config.get('scene')
+
+    while (scene.children.length > 0) {
+      scene.remove(scene.children[0])
+    }
   }
   render (state) {
     if (Config.get('composer')) {
@@ -42,15 +57,10 @@ class Core {
 
     // Resize render
     renderer.setSize(size.get('w'), size.get('h'))
+
     if (composer) {
       composer.setSize(size.get('w'), size.get('h'))
     }
-  }
-  start () {
-    Loop.subscribe(this.render)
-  }
-  stop () {
-    Loop.unsubscribe(this.render)
   }
 }
 
