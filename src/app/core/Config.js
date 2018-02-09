@@ -1,5 +1,6 @@
 import {fromJS} from 'immutable'
 import {WebGLRenderer, Scene, PerspectiveCamera} from 'three'
+import OrbitControls from 'three-orbitcontrols'
 
 // Canvas
 const canvas = document.getElementById('scene')
@@ -11,6 +12,7 @@ const scene = new Scene()
 const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
 const renderer = new WebGLRenderer({canvas, antialias: true})
 const composer = undefined
+const controls = new OrbitControls(camera, renderer.domElement)
 const passes = []
 
 // Config
@@ -23,5 +25,6 @@ export default fromJS({
   camera,
   renderer,
   composer,
+  controls,
   passes
 })
