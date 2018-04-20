@@ -2,7 +2,10 @@ import Core, {Config, Loop} from './core'
 import ShaderObject from './objects/ShaderObject'
 // import vertexShader from './shaders/vert.glsl'
 import fragmentShader from './shaders/frag.glsl'
-import {BoxGeometry, Mesh, MeshLambertMaterial, PointLight, Vector2} from 'three'
+import {BoxGeometry, Mesh, MeshBasicMaterial, TextureLoader, PointLight, Vector2, RepeatWrapping} from 'three'
+import imageSrc from '../assets/images/1.jpg'
+import { Image as ImageJs } from 'image-js'
+import { treemap, hierarchy } from 'd3'
 
 export default class App extends Core {
   constructor () {
@@ -18,7 +21,7 @@ export default class App extends Core {
     const backLight = new PointLight(0xFFFFFF, 0.5)
     const cube = new Mesh(
       new BoxGeometry(10, 10, 10),
-      new MeshLambertMaterial({color: 0xF0D1E0})
+      new MeshBasicMaterial({color: 0xF0D1E0})
     )
     const background = new ShaderObject({
       uniforms: {
@@ -40,18 +43,70 @@ export default class App extends Core {
     backLight.position.z = -20
     backLight.position.y = -20
 
+    ImageJs.load(imageSrc)
+      .then((image) => {
+        const grey = image.grey()
+        const histogram = grey.getHistogram({
+          maxSlots: 16,
+          useAlpha: false
+        })
+
+        const map = treemap()
+          .size([grey.width / 2, grey.height / 2])
+          .padding(2)
+          .round(true)
+
+        const root = hierarchy({
+          name: 'root',
+          children: histogram.map((value, name) => ({
+            name: name * 4,
+            value
+          }))
+        })
+          .sum(d => d.value)
+          .sort((a, b) => b.value - a.value)
+
+        map(root)
+
+        const texture = new TextureLoader().load(grey.toDataURL(), () => {
+          texture.wrapS = RepeatWrapping
+          texture.wrapT = RepeatWrapping
+
+          root.each((d) => {
+            if (d.data.name !== 'root') {
+              const square = new Mesh(
+                new BoxGeometry(d.x1 - d.x0, d.y1 - d.y0, 1),
+                new MeshBasicMaterial({
+                  map: texture.clone()
+                })
+              )
+
+              square.material.map.repeat.set((d.x1 - d.x0) / root.x1, (d.y1 - d.y0) / root.y1)
+              square.material.map.offset.set(d.x0 / root.x1, d.y0 / root.y1)
+              square.material.map.rotation = Math.random() * Math.PI * 2
+              square.material.map.needsUpdate = true
+
+              square.position.x = ((d.x0 + (d.x1 - d.x0) / 2) - root.x1 / 2)
+              square.position.y = ((d.y0 + (d.y1 - d.y0) / 2) - root.y1 / 2)
+
+              // square.position.z = Math.random() * 80
+              // square.rotation.x = Math.random() * Math.PI * 2
+
+              scene.add(square)
+            }
+          })
+        })
+      })
+
     // Add
     scene.add(
       background,
-      cube,
+      // cube,
       frontLight,
       backLight
     )
 
     // Update
-    this.unsuscribers.push(Loop.subscribe(state => {
-      cube.rotation.x -= 0.02
-      cube.rotation.y += 0.02
-    }))
+    this.unsuscribers.push(Loop.subscribe(state => {}))
   }
 }
