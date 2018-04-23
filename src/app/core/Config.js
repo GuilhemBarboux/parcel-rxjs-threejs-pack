@@ -9,7 +9,7 @@ canvas.height = window.innerHeight
 
 // THREE
 const scene = new Scene()
-const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
+const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000)
 const renderer = new WebGLRenderer({canvas, antialias: true})
 const composer = undefined
 const controls = new OrbitControls(camera, renderer.domElement)

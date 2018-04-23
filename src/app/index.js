@@ -2,10 +2,12 @@ import Core, {Config, Loop} from './core'
 import ShaderObject from './objects/ShaderObject'
 // import vertexShader from './shaders/vert.glsl'
 import fragmentShader from './shaders/frag.glsl'
-import {BoxGeometry, Mesh, MeshBasicMaterial, TextureLoader, PointLight, Vector2, RepeatWrapping} from 'three'
+import {BoxGeometry, Mesh, MeshBasicMaterial, PointLight, Vector2} from 'three'
 import imageSrc from '../assets/images/1.jpg'
-import { Image as ImageJs } from 'image-js'
-import { treemap, hierarchy } from 'd3'
+import imageSrc2 from '../assets/images/2.jpg'
+import ImageFragment from './objects/ImageFragment'
+
+const STEP = 1.2
 
 export default class App extends Core {
   constructor () {
@@ -17,12 +19,17 @@ export default class App extends Core {
 
     const scene = Config.get('scene')
     const camera = Config.get('camera')
+    const renderer = Config.get('renderer')
     const frontLight = new PointLight(0xFFFFFF, 1)
     const backLight = new PointLight(0xFFFFFF, 0.5)
     const cube = new Mesh(
       new BoxGeometry(10, 10, 10),
       new MeshBasicMaterial({color: 0xF0D1E0})
     )
+    const imageFragment = new ImageFragment(imageSrc)
+    const imageFragment2 = new ImageFragment(imageSrc2)
+    const imageFragment3 = new ImageFragment(imageSrc)
+
     const background = new ShaderObject({
       uniforms: {
         u_resolution: {
@@ -33,8 +40,14 @@ export default class App extends Core {
       fragmentShader
     })
 
+    imageFragment.position.z = -1000
+    imageFragment2.position.z = -1500
+    imageFragment3.position.z = -2000
+
+    renderer.setClearColor(0xffffff)
+
     // Update camera position
-    camera.position.z = 100
+    camera.position.z = 0
     background.position.z = -10
 
     // Update light
@@ -43,70 +56,25 @@ export default class App extends Core {
     backLight.position.z = -20
     backLight.position.y = -20
 
-    ImageJs.load(imageSrc)
-      .then((image) => {
-        const grey = image.grey()
-        const histogram = grey.getHistogram({
-          maxSlots: 16,
-          useAlpha: false
-        })
-
-        const map = treemap()
-          .size([grey.width / 2, grey.height / 2])
-          .padding(2)
-          .round(true)
-
-        const root = hierarchy({
-          name: 'root',
-          children: histogram.map((value, name) => ({
-            name: name * 4,
-            value
-          }))
-        })
-          .sum(d => d.value)
-          .sort((a, b) => b.value - a.value)
-
-        map(root)
-
-        const texture = new TextureLoader().load(grey.toDataURL(), () => {
-          texture.wrapS = RepeatWrapping
-          texture.wrapT = RepeatWrapping
-
-          root.each((d) => {
-            if (d.data.name !== 'root') {
-              const square = new Mesh(
-                new BoxGeometry(d.x1 - d.x0, d.y1 - d.y0, 1),
-                new MeshBasicMaterial({
-                  map: texture.clone()
-                })
-              )
-
-              square.material.map.repeat.set((d.x1 - d.x0) / root.x1, (d.y1 - d.y0) / root.y1)
-              square.material.map.offset.set(d.x0 / root.x1, d.y0 / root.y1)
-              square.material.map.rotation = Math.random() * Math.PI * 2
-              square.material.map.needsUpdate = true
-
-              square.position.x = ((d.x0 + (d.x1 - d.x0) / 2) - root.x1 / 2)
-              square.position.y = ((d.y0 + (d.y1 - d.y0) / 2) - root.y1 / 2)
-
-              // square.position.z = Math.random() * 80
-              // square.rotation.x = Math.random() * Math.PI * 2
-
-              scene.add(square)
-            }
-          })
-        })
-      })
-
     // Add
     scene.add(
-      background,
+      // background,
       // cube,
+      imageFragment,
+      imageFragment2,
+      imageFragment3,
       frontLight,
       backLight
     )
 
     // Update
-    this.unsuscribers.push(Loop.subscribe(state => {}))
+    this.unsuscribers.push(Loop.subscribe(state => {
+      imageFragment.position.z += STEP
+      imageFragment2.position.z += STEP
+      imageFragment3.position.z += STEP
+      if (imageFragment.position.z > -1000) imageFragment.update()
+      if (imageFragment2.position.z > -1000) imageFragment2.update()
+      if (imageFragment3.position.z > -1000) imageFragment3.update()
+    }))
   }
 }
